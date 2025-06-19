@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CQG - GIS Job Request Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      padding: 20px;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"], select, textarea {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      width: 100%;
+      padding: 6px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+    }
+    button {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    button:not(.delete-btn) {
+      background-color: #0078d4;
+      color: white;
+	  border: 3px solid black;
+    }
+    button:not(.delete-btn):hover {
+      background-color: #005a9e;
+	  border: 3px solid black;
+    }
+	button.maroon-btn {
+	  background-color: rgba(124, 22, 42, 0.75) !important;
+	  color: white;
+	  border: 1px solid black;
+	}
+	button.maroon-btn:hover {
+	  background-color: rgba(124, 22, 42, 1) !important;
+	  border: 1px solid black;
+	}
+    .delete-btn {
+      background-color: transparent;
+      color: red;
+      border: 1px solid red;
+    }
+    .delete-btn:hover {
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+    .inline-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 5px;
+    }
+    .inline-checkboxes label {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    #addButtons {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 2px solid #ddd;
+    }
+    #submitSection {
+      margin-top: 30px;
+      border-top: 1px solid #ccc;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2 style="color: #7c162a;">CQG - GIS Job Request Form</h2>
+
+<label>Project Number</label>
+<input type="text" list="projectOptions" id="ranList"/>
+<datalist id="projectOptions">
+  <option value="P001 - River Crossing">
+  <option value="P002 - Vegetation Study">
+  <option value="P003 - Infrastructure Analysis">
+  <option value="P004 - Coastal Hazards">
+  <option value="P005 - Wildlife Corridor">
+</datalist>
+
+<label>Abtrac Task</label>
+<input type="text" id="abtracTask" />
+
+<div id="requestBlocks"></div>
+
+<div id="addButtons">
+  <button type="button" class="maroon-btn" onclick="addMapBlock()">Mapping (New)</button>
+  <button type="button" class="maroon-btn" onclick="addMapUpdateBlock()">Mapping (Update)</button>
+  <button type="button" class="maroon-btn" onclick="addAreaBlock()">Area Calculation</button>
+  <button type="button" class="maroon-btn" onclick="addAnalysisBlock()">Other Analysis</button>
+</div>
+
+<div id="submitSection">
+  <button onclick="generatePDF()">Download PDF</button>
+  <a href="https://cqgrocky.sharepoint.com/:l:/s/GISTeam/FG1ek-oukMxNtQl-KYshjR4BT2FDgVqG9tOh42mKmwfPqw?nav=MGNhM2IyMDQtNDJmMy00MDM3LWI3YmUtYWQzMzkzM2I4Njdm" target="_blank">
+    <button>Submit Request</button>
+  </a>
+</div>
+
+<script>
+function scrollToButtons() {
+  document.getElementById("addButtons").scrollIntoView({ behavior: "smooth" });
+}
+function addMapBlock() {
+  const count = document.querySelectorAll(".section h4").length;
+  const div = document.createElement("div");
+  div.className = "section";
+  div.innerHTML = `
+    <h4>Mapping (New)</h4>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;">
+        <label>Figure Number</label>
+        <input type="text">
+      </div>
+      <div style="flex:2;">
+        <label>Figure Name</label>
+        <input type="text">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <div style="flex:1;">
+        <label>Basemap</label>
+        <select>
+		  <option>Google Satellite Imagery</option>
+          <option>ArcGIS World Imagery</option>
+          <option>None</option>
+          <option>Other (Please specify below)</option>
+        </select>
+      </div>
+      <div style="flex:2;">
+        <label>Standard Layers</label>
+        <div class="inline-checkboxes">
+          <label><input type="checkbox" class="layer" checked> Roads</label>
+          <label><input type="checkbox" class="layer" checked> Cadastral Boundaries</label>
+          <label><input type="checkbox" class="layer"> Waterways</label>
+		  <label><input type="checkbox" class="layer"> Place Names</label>
+          <label><input type="checkbox" class="layer"> RE Mapping</label>
+          <label><input type="checkbox" class="layer"> Regulated Vegetation (VMA)</label>
+          <label><input type="checkbox" class="layer"> Essential Habitat</label>
+          <label><input type="checkbox" class="layer"> Protected Plant Trigger Areas</label>
+        </div>
+      </div>
+    </div>
+    <label style="margin-top:10px;">Other Layers/ Required Extent/ Other Instructions</label>
+    <textarea rows="10"></textarea>
+    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+  `;
+  document.getElementById("requestBlocks").appendChild(div);
+  scrollToButtons();
+}
+function addMapUpdateBlock() {
+  const count = document.querySelectorAll(".section h4").length;
+  const div = document.createElement("div");
+  div.className = "section";
+  div.innerHTML = `
+    <h4>Mapping (Update)</h4>
+    <label>CQG Map Number</label>
+    <input type="text" />
+    <label>Instructions</label>
+    <textarea rows="10"></textarea>
+    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+  `;
+  document.getElementById("requestBlocks").appendChild(div);
+  scrollToButtons();
+}
+function addAreaBlock() {
+  const count = document.querySelectorAll(".section h4").length;
+  const div = document.createElement("div");
+  div.className = "section";
+  div.innerHTML = `
+    <h4>Area Calculation</h4>
+    <label>Instructions</label>
+    <textarea rows="10"></textarea>
+    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+  `;
+  document.getElementById("requestBlocks").appendChild(div);
+  scrollToButtons();
+}
+function addAnalysisBlock() {
+  const count = document.querySelectorAll(".section h4").length;
+  const div = document.createElement("div");
+  div.className = "section";
+  div.innerHTML = `
+    <h4>Other Analysis</h4>
+    <label>Instructions</label>
+    <textarea rows="10"></textarea>
+    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+  `;
+  document.getElementById("requestBlocks").appendChild(div);
+  scrollToButtons();
+}
+function copyPreviousBlock(button) {
+  const current = button.closest(".section");
+  const sections = Array.from(document.querySelectorAll(".section"));
+  const currentIndex = sections.indexOf(current);
+  if (currentIndex > 0) {
+    const prev = sections[currentIndex - 1];
+    const prevInputs = prev.querySelectorAll("input, textarea, select");
+    const currInputs = current.querySelectorAll("input, textarea, select");
+    prevInputs.forEach((el, i) => {
+      if (currInputs[i]) currInputs[i].value = el.value;
+    });
+    const prevChecks = prev.querySelectorAll("input[type='checkbox']");
+    const currChecks = current.querySelectorAll("input[type='checkbox']");
+    prevChecks.forEach((el, i) => {
+      if (currChecks[i]) currChecks[i].checked = el.checked;
+    });
+  }
+}
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
+  const projectName = document.getElementById("ranList").value || "";
+  const abtracTask = document.getElementById("abtracTask").value || "";
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'bold');
+  doc.text(`Project: ${projectName}`, 10, 25);
+  doc.text(`Abtrac Task: ${abtracTask}`, 10, 32);
+  let startY = 40;
+  const labelWidth = 37;
+
+  function drawSingleColumnTable(title, entries) {
+    if (entries.length === 0) return;
+    entries.forEach((block, index) => {
+      if (startY > 180) {
+        doc.addPage();
+        startY = 20;
+        doc.setFontSize(11);
+		doc.setFont(undefined, 'bold');
+        doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
+        doc.setFontSize(11)
+		doc.setFont(undefined, 'normal');
+      }
+      doc.setFontSize(11);
+	  doc.setFont(undefined, 'normal')
+      doc.text(title + (entries.length > 1 ? ` ${index + 1}` : ""), 10, startY);
+      startY += 6;
+      doc.setFontSize(11);
+      block.forEach(([label, content]) => {
+        const lines = doc.splitTextToSize(content, 240);
+        const height = lines.length * 6;
+        if (startY + height > 190) {
+          doc.addPage();
+          startY = 20;
+          doc.setFontSize(11);
+		  doc.setFont(undefined, 'bold');
+          doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
+          doc.setFontSize(11);
+        }
+        doc.rect(10, startY, 37, height);
+		doc.setFont(undefined, 'bold');
+        doc.text(label, 12, startY + 5);
+		doc.setFont(undefined, 'normal');
+        doc.rect(47, startY, 240, height);
+        doc.text(lines, 49, startY + 5);
+        startY += height;
+      });
+      startY += 10;
+    });
+  }
+
+  const mapBlocks = [], mapUpdateBlocks = [], areaBlocks = [], analysisBlocks = [];
+  document.querySelectorAll("#requestBlocks .section").forEach((section) => {
+    const title = section.querySelector("h4")?.innerText || "";
+    const textareas = section.querySelectorAll("textarea");
+    const inputs = section.querySelectorAll("input[type='text']");
+    const selects = section.querySelectorAll("select");
+    const layers = Array.from(section.querySelectorAll("input.layer:checked")).map(cb => cb.parentElement.innerText.trim()).join(", ");
+    if (title.includes("Mapping (New)") || (title === "Map")) {
+		mapBlocks.push([
+		  ["Figure Number", inputs[0]?.value || ""],
+		  ["Figure Name", inputs[1]?.value || ""],
+		  ["Basemap", selects[0]?.value || ""],
+		  ["Standard Layers", layers],
+		  ["Other Instructions", textareas[0]?.value || ""]
+		]);
+  } else if (title.includes("Mapping (Update)")) {
+		mapUpdateBlocks.push([
+		  ["CQG Map Number", inputs[0]?.value || ""],
+		  ["Instructions", textareas[0]?.value || ""]
+		]);
+  } else if (title.includes("Area Calculation")) {
+		areaBlocks.push([["Instructions", textareas[0]?.value || ""]]);
+  } else if (title.includes("Other Analysis")) {
+		analysisBlocks.push([["Instructions", textareas[0]?.value || ""]]);
+  }
+  });
+
+drawSingleColumnTable("Mapping (New)", mapBlocks);
+drawSingleColumnTable("Mapping (Update)", mapUpdateBlocks);
+drawSingleColumnTable("Area Calculation", areaBlocks);
+drawSingleColumnTable("Other Analysis", analysisBlocks);
+
+  doc.save("CQG_GIS_Request_Form.pdf");
+}
+</script>
+</body>
+</html>

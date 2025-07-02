@@ -464,7 +464,7 @@ function addMapBlock() {
         <input type="text">
       </div>
       <div style="flex:2;">
-        <label>Map Title (Figure Title)</label>
+        <label>Map Title</label>
         <input type="text">
       </div>
       <div style="flex:1;">
@@ -472,8 +472,14 @@ function addMapBlock() {
         <input type="text">
       </div>
       <div style="flex:2;">
-        <label>Report Title</label>
+        <label>Project Title (Report Title)</label>
         <input type="text">
+      </div>
+      <div style="flex:1; text-align:right;">
+        <label style="visibility:hidden;">.</label>
+        <a href="https://example.com/sample-map-title" target="_blank" title="Click to see an example of how these details will be used on the map title." style="color:#0078d4; text-decoration:underline; white-space:nowrap;">
+          Map Title Template
+        </a>
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:10px;">
@@ -502,22 +508,31 @@ function addMapBlock() {
     </div>
     <label style="margin-top:10px;">Other Layers/ Required Extent/ Other Instructions</label>
     <textarea rows="10"></textarea>
-    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+      <button type="button" class="delete-btn" onclick="this.parentElement.parentElement.remove()">Delete Block</button>
+      <a href="https://github.com/akcharith/sample.jpg" target="_blank">
+        <button type="button">See Sample Map</button>
+      </a>
+    </div>
   `;
   document.getElementById("requestBlocks").appendChild(div);
   scrollToButtons();
 }
 function addMapUpdateBlock() {
-  const count = document.querySelectorAll(".section h4").length;
   const div = document.createElement("div");
   div.className = "section";
   div.innerHTML = `
     <h4>Mapping (Update)</h4>
-    <label>CQG Map Number (eg. 25007-02-14)</label>
+    <label>CQG Map Number</label>
     <input type="text" />
     <label>Instructions</label>
     <textarea rows="10"></textarea>
-    <button type="button" class="delete-btn" onclick="this.parentElement.remove()">Delete Block</button>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+      <button type="button" class="delete-btn" onclick="this.parentElement.parentElement.remove()">Delete Block</button>
+      <a href="https://github.com/akcharith/sample.jpg" target="_blank">
+        <button type="button">See Sample Map</button>
+      </a>
+    </div>
   `;
   document.getElementById("requestBlocks").appendChild(div);
   scrollToButtons();

@@ -459,23 +459,21 @@ function addMapBlock() {
   div.innerHTML = `
     <h4>Mapping (New)</h4>
     <div style="display:flex;gap:10px;align-items:end;">
-      <div style="flex:1;">
-        <label><a href="https://github.com/akcharith/gis-request-form/blob/main/sample.png?raw=true" target="_blank" style="text-decoration: none; color: black;">Figure Number <span style="color: #0078d4;">- Sample map title</span></a></label>
-        <input type="text">
-      </div>
-      <div style="flex:2;">
-        <label>Map Title (Figure Title)</label>
-        <input type="text">
-      </div>
-      <div style="flex:1;">
-        <label>Client</label>
-        <input type="text">
-      </div>
-      <div style="flex:2;">
-        <label>Report Title</label>
-        <input type="text">
-      </div>
-    </div>
+	<div style="flex:1;">
+	  <label>Figure Number</label>
+	  <input type="text">
+	</div>
+	<div style="flex:2;">
+	  <label>Map Title (Figure Title)</label>
+	  <input type="text">
+	</div>
+	<div style="flex:3;">
+	  <label>
+	    Client & Report Title 
+	    <a href="https://github.com/akcharith/gis-request-form/blob/main/sample.png?raw=true" target="_blank" style="margin-left: 10px; font-weight: normal; color: #0078d4; text-decoration: underline;">See sample image for details</a>
+	  </label>
+	  <input type="text">
+	</div>
     <div style="display:flex;gap:10px;margin-top:10px;">
       <div style="flex:1;">
         <label>Basemap</label>

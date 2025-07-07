@@ -429,9 +429,6 @@
 	<option value="25xxxP - Energy Estates Pipeline">
 </datalist>
 
-<label>Abtrac Task</label>
-<input type="text" id="abtracTask" />
-
 <div id="requestBlocks"></div>
 
 <div id="addButtons">
@@ -562,12 +559,10 @@ function generatePDF() {
   doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
 
   const projectName = document.getElementById("ranList").value || "";
-  const abtracTask = document.getElementById("abtracTask").value || "";
 
   doc.setFontSize(11);
   doc.setFont(undefined, 'bold');
   doc.text(`Project: ${projectName}`, 10, 25);
-  doc.text(`Abtrac Task: ${abtracTask}`, 10, 32);
 
   let startY = 40;
 

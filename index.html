@@ -112,7 +112,7 @@
 <h2 style="color: #7c162a;">GIS Job Request Form</h2>
 
 <label>Project Number</label>
-<input type="text" list="projectOptions" id="ranList"/>
+<input type="text" list="projectOptions" id="projectNumber"/>
 <datalist id="projectOptions">
 	<option value="11071 Cheetham Salt">
 	<option value="11071 Cheetham Salt ERC">
@@ -440,6 +440,12 @@
 	<option value="25xxxP - Energy Estates Pipeline">
 </datalist>
 
+<label>Abtrac Task</label>
+<input type="text" id="abtracTask">
+
+<label>Required By (Date & Time)</label>
+<input type="datetime-local" id="requiredBy">
+
 <div id="requestBlocks"></div>
 
 <div id="addButtons">
@@ -450,10 +456,7 @@
 </div>
 
 <div id="submitSection">
-  <button onclick="generatePDF()">Download PDF</button>
-  <a href="https://cqgrocky.sharepoint.com/:l:/s/GISTeam/FG1ek-oukMxNtQl-KYshjR4BT2FDgVqG9tOh42mKmwfPqw?nav=MGNhM2IyMDQtNDJmMy00MDM3LWI3YmUtYWQzMzkzM2I4Njdm" target="_blank">
-    <button>Submit Request</button>
-  </a>
+  <button onclick="submitRequest()">Submit Request</button>
 </div>
 
 <script>
@@ -483,7 +486,14 @@ function addMapBlock() {
       class="map-title-box" 
       onkeydown="handleEnterSpacing(event)"
       maxlength="1000"
-    ></textarea>
+    >
+e.g. Figure 1.1
+
+e.g. Pinion Advisory
+
+e.g. South Yaamba Business Case - Desktop Assessment
+
+e.g. Regional Ecosystems and Protected Plants</textarea>
   </div>
 
   <!-- Basemap + Standard Layers -->
@@ -589,100 +599,145 @@ function addAnalysisBlock() {
   document.getElementById("requestBlocks").appendChild(div);
   scrollToButtons();
 }
-function generatePDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
-  doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
+  async function submitRequest() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
 
-  const projectName = document.getElementById("ranList").value || "";
+    const projectNumber = document.getElementById("projectNumber").value || "";
+    const abtracTask = document.getElementById("abtracTask").value || "";
+    let requiredBy = document.getElementById("requiredBy").value || "";
+	if (requiredBy && requiredBy.length === 16) {
+	  requiredBy += ":00"; // add seconds to match ISO format
+}
 
-  doc.setFontSize(11);
-  doc.setFont(undefined, 'bold');
-  doc.text(`Project: ${projectName}`, 10, 25);
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Project: ${projectNumber}`, 10, 25);
 
-  let startY = 40;
+    let startY = 40;
 
-  function drawSingleColumnTable(title, entries) {
-    if (entries.length === 0) return;
-    entries.forEach((block, index) => {
-      if (startY > 180) {
-        doc.addPage();
-        startY = 20;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
-      }
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.text(title + (entries.length > 1 ? ` ${index + 1}` : ""), 10, startY);
-      startY += 6;
-
-      block.forEach(([label, content]) => {
-        const lines = doc.splitTextToSize(content, 240);
-        const height = lines.length * 6;
-        if (startY + height > 190) {
+    function drawSingleColumnTable(title, entries) {
+      if (entries.length === 0) return;
+      entries.forEach((block, index) => {
+        if (startY > 180) {
           doc.addPage();
           startY = 20;
           doc.setFontSize(11);
           doc.setFont(undefined, 'bold');
           doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
-          doc.setFontSize(11);
         }
-        doc.rect(10, startY, 37, height);
-        doc.setFont(undefined, 'bold');
-        doc.text(label, 12, startY + 5);
+        doc.setFontSize(11);
         doc.setFont(undefined, 'normal');
-        doc.rect(47, startY, 240, height);
-        if (label.toLowerCase().includes("instruction") && /^https?:\/\/\S+$/i.test(content.trim())) {
-			doc.setTextColor(0, 102, 204);
-			doc.textWithLink(content.trim(), 49, startY + 5, { url: content.trim() });
-			doc.setTextColor(0, 0, 0);
-		  } else {
-			doc.text(lines, 49, startY + 5);
-		  }
-        startY += height;
+        doc.text(title + (entries.length > 1 ? ` ${index + 1}` : ""), 10, startY);
+        startY += 6;
+
+        block.forEach(([label, content]) => {
+          const lines = doc.splitTextToSize(content, 240);
+          const height = lines.length * 6;
+          if (startY + height > 190) {
+            doc.addPage();
+            startY = 20;
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
+            doc.setFontSize(11);
+          }
+          doc.rect(10, startY, 37, height);
+          doc.setFont(undefined, 'bold');
+          doc.text(label, 12, startY + 5);
+          doc.setFont(undefined, 'normal');
+          doc.rect(47, startY, 240, height);
+          if (label.toLowerCase().includes("instruction") && /^https?:\/\/\S+$/i.test(content.trim())) {
+            doc.setTextColor(0, 102, 204);
+            doc.textWithLink(content.trim(), 49, startY + 5, { url: content.trim() });
+            doc.setTextColor(0, 0, 0);
+          } else {
+            doc.text(lines, 49, startY + 5);
+          }
+          startY += height;
+        });
+
+        startY += 10;
+      });
+    }
+
+    const mapBlocks = [], mapUpdateBlocks = [], areaBlocks = [], analysisBlocks = [];
+    document.querySelectorAll("#requestBlocks .section").forEach((section) => {
+      const title = section.querySelector("h4")?.innerText || "";
+      const textareas = section.querySelectorAll("textarea");
+      const inputs = section.querySelectorAll("input[type='text']");
+      const selects = section.querySelectorAll("select");
+      const layers = Array.from(section.querySelectorAll("input.layer:checked")).map(cb => cb.parentElement.innerText.trim()).join(", ");
+
+      if (title.includes("Mapping (New)")) {
+        mapBlocks.push([
+          ["Map Title", textareas[0]?.value || ""],
+          ["Basemap", selects[0]?.value || ""],
+          ["Standard Layers", layers],
+          ["Other Instructions", textareas[1]?.value || ""]
+        ]);
+      } else if (title.includes("Mapping (Update)")) {
+        mapUpdateBlocks.push([
+          ["CQG Map Number", inputs[0]?.value || ""],
+          ["Instructions", textareas[0]?.value || ""]
+        ]);
+      } else if (title.includes("Area Calculation")) {
+        areaBlocks.push([["Instructions", textareas[0]?.value || ""]]);
+      } else if (title.includes("Other Analysis")) {
+        analysisBlocks.push([["Instructions", textareas[0]?.value || ""]]);
+      }
+    });
+
+    drawSingleColumnTable("Mapping (New)", mapBlocks);
+    drawSingleColumnTable("Mapping (Update)", mapUpdateBlocks);
+    drawSingleColumnTable("Area Calculation", areaBlocks);
+    drawSingleColumnTable("Other Analysis", analysisBlocks);
+
+const blob = doc.output("blob");
+const fileName = `GIS_Request_${Date.now()}.pdf`;
+
+// Encode full Base64 with prefix
+const fileContent = await new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onloadend = () => {
+  const base64 = reader.result.split(",")[1]; // ✅ remove prefix
+  resolve(base64);
+};
+  reader.onerror = reject;
+  reader.readAsDataURL(blob);
+});
+
+const payload = {
+  projectNumber,
+  abtracTask,
+  requiredBy,
+  fileName,
+  fileContent
+};
+
+    const url = "https://defaulteccdde28e6c24e5cbcd5aa5aec36eb.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58b4bb2b2cda443d93b621a77a538065/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EE0jJGYXMNUtRP4zZEDW1j4nSFrXbzaJ_0gTHi6f4Yg";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
 
-      startY += 10;
-    });
-  }
-
-  const mapBlocks = [], mapUpdateBlocks = [], areaBlocks = [], analysisBlocks = [];
-  document.querySelectorAll("#requestBlocks .section").forEach((section) => {
-    const title = section.querySelector("h4")?.innerText || "";
-    const textareas = section.querySelectorAll("textarea");
-    const inputs = section.querySelectorAll("input[type='text']");
-    const selects = section.querySelectorAll("select");
-    const layers = Array.from(section.querySelectorAll("input.layer:checked")).map(cb => cb.parentElement.innerText.trim()).join(", ");
-
-    if (title.includes("Mapping (New)")) {
-	  mapBlocks.push([
-		["Map Title", textareas[0]?.value || ""],
-		["Basemap", selects[0]?.value || ""],
-		["Standard Layers", layers],
-		["Other Instructions", textareas[1]?.value || ""]
-	  ]);
-	} else if (title.includes("Mapping (Update)")) {
-      mapUpdateBlocks.push([
-        ["CQG Map Number", inputs[0]?.value || ""],
-        ["Instructions", textareas[0]?.value || ""]
-      ]);
-    } else if (title.includes("Area Calculation")) {
-      areaBlocks.push([["Instructions", textareas[0]?.value || ""]]);
-    } else if (title.includes("Other Analysis")) {
-      analysisBlocks.push([["Instructions", textareas[0]?.value || ""]]);
+      if (response.ok) {
+        alert("Request submitted successfully!");
+      } else {
+	  const errorText = await response.text();
+		alert("Submission failed: " + errorText);
+      }
+    } catch (error) {
+      console.error("Error submitting:", error);
+      alert("An error occurred while submitting.");
     }
-  });
-
-  drawSingleColumnTable("Mapping (New)", mapBlocks);
-  drawSingleColumnTable("Mapping (Update)", mapUpdateBlocks);
-  drawSingleColumnTable("Area Calculation", areaBlocks);
-  drawSingleColumnTable("Other Analysis", analysisBlocks);
-
-  doc.save("CQG_GIS_Request_Form.pdf");
-}
+  }
 </script>
 </body>
 </html>

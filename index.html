@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <body>
   <header style=padding: 20px;">
   <img src="CQG Consulting.jpg" alt="Logo" style="height: 50px;">
   </header>
   <title>CQG - GIS Job Request Form</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -25,7 +25,7 @@
 	  overflow-wrap: break-word;
 	  padding: 10px;
 	  line-height: 1.4;
-}
+	}
     .section {
       margin: 20px 0;
       padding: 15px;
@@ -33,6 +33,19 @@
       border-radius: 8px;
       background: #f9f9f9;
     }
+	  .remove-btn {
+    margin-left: 8px !important;
+    font-size: 12px !important;
+    padding: 2px 6px !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    color: #c00 !important;
+	}
+
+	.remove-btn:hover {
+    text-decoration: underline !important;
+	}
     label {
       font-weight: bold;
       display: block;
@@ -107,12 +120,13 @@
     }
   </style>
 </head>
-<body>
 
+<body>
 <h2 style="color: #7c162a;">GIS Job Request Form</h2>
 
 <label>Project Number</label>
 <input type="text" list="projectOptions" id="projectNumber"/>
+<div id="datalist-container" style="display: none;"></div>
 <datalist id="projectOptions">
 	<option value="11071 Cheetham Salt">
 	<option value="11071 Cheetham Salt ERC">
@@ -440,11 +454,13 @@
 	<option value="25xxxP - Energy Estates Pipeline">
 </datalist>
 
+
 <label>Abtrac Task</label>
 <input type="text" id="abtracTask">
 
 <label>Required By (Date & Time)</label>
-<input type="datetime-local" id="requiredBy">
+<input type="datetime-local" id="requiredBy" style="font-family: Calibri, Helvetica, Arial, sans-serif; font-size: 15px;">
+
 
 <div id="requestBlocks"></div>
 
@@ -455,11 +471,79 @@
   <button type="button" class="maroon-btn" onclick="addAnalysisBlock()">Other Analysis</button>
 </div>
 
+<input type="file" id="fileUpload" name="fileUpload" multiple hidden>
+<button type="button" id="customFileBtn">Attach Files</button>
+<ul id="fileList"></ul>
+
+
+
 <div id="submitSection">
+<div style="margin-bottom: 10px;">
+  <label><input type="checkbox" id="downloadPdfCheckbox"> Download a copy of the generated PDF</label>
+</div>
+
   <button onclick="submitRequest()">Submit Request</button>
 </div>
 
 <script>
+document.getElementById("fileUpload").addEventListener("change", function () {
+    const fileList = document.getElementById("fileList");
+    fileList.innerHTML = ""; // Clear previous list
+
+    const files = this.files;
+    if (files.length === 0) {
+        fileList.innerHTML = "<li>No files selected</li>";
+    } else {
+        for (let i = 0; i < files.length; i++) {
+            const li = document.createElement("li");
+            li.textContent = files[i].name;
+            fileList.appendChild(li);
+        }
+    }
+});
+let selectedFiles = [];
+
+const fileInput = document.getElementById("fileUpload");
+const customFileBtn = document.getElementById("customFileBtn");
+
+customFileBtn.addEventListener("click", () => {
+    fileInput.click(); // Trigger file chooser
+});
+
+fileInput.addEventListener("change", () => {
+    const files = Array.from(fileInput.files);
+
+    // Add new files without duplicates
+    files.forEach(file => {
+        if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+            selectedFiles.push(file);
+        }
+    });
+
+    updateFileListDisplay();
+});
+
+function updateFileListDisplay() {
+    const fileList = document.getElementById("fileList");
+    fileList.innerHTML = "";
+
+    selectedFiles.forEach((file, index) => {
+        const li = document.createElement("li");
+        li.textContent = file.name;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "❌";
+        removeBtn.className = "remove-btn";
+        removeBtn.onclick = function () {
+            selectedFiles.splice(index, 1);
+            updateFileListDisplay();
+        };
+
+        li.appendChild(removeBtn);
+        fileList.appendChild(li);
+    });
+}
+
 function scrollToButtons() {
   document.getElementById("addButtons").scrollIntoView({ behavior: "smooth" });
 }
@@ -541,7 +625,6 @@ e.g. Regional Ecosystems and Protected Plants</textarea>
   scrollToButtons();
 }
 
-// Handle Enter key for inserting single blank line
 function handleEnterSpacing(e) {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -599,25 +682,28 @@ function addAnalysisBlock() {
   document.getElementById("requestBlocks").appendChild(div);
   scrollToButtons();
 }
-  async function submitRequest() {
+async function submitRequest() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
+    doc.setFont("helvetica", 'bold');
     doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
 
     const projectNumber = document.getElementById("projectNumber").value || "";
     const abtracTask = document.getElementById("abtracTask").value || "";
     let requiredBy = document.getElementById("requiredBy").value || "";
 	if (requiredBy && requiredBy.length === 16) {
-	  requiredBy += ":00"; // add seconds to match ISO format
-}
+	  requiredBy += ":00";
+	}
 
     doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Project: ${projectNumber}`, 10, 25);
+    doc.setFont("helvetica", 'bold');
+	doc.text(`Project: ${projectNumber}`, 10, 25);
+	doc.setFont("helvetica", 'normal');
+	doc.text(`Abtrac Task: ${abtracTask}`, 10, 32);
+	doc.text(`Required by: ${requiredBy}`, 10, 39);
 
-    let startY = 40;
+    let startY = 46;
 
     function drawSingleColumnTable(title, entries) {
       if (entries.length === 0) return;
@@ -626,11 +712,11 @@ function addAnalysisBlock() {
           doc.addPage();
           startY = 20;
           doc.setFontSize(11);
-          doc.setFont(undefined, 'bold');
+          doc.setFont("helvetica", 'bold');
           doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
         }
         doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
+        doc.setFont("helvetica", 'normal');
         doc.text(title + (entries.length > 1 ? ` ${index + 1}` : ""), 10, startY);
         startY += 6;
 
@@ -641,14 +727,14 @@ function addAnalysisBlock() {
             doc.addPage();
             startY = 20;
             doc.setFontSize(11);
-            doc.setFont(undefined, 'bold');
+            doc.setFont("helvetica", 'bold');
             doc.text("CQG GIS Request Form", 148, 15, { align: "center" });
             doc.setFontSize(11);
           }
           doc.rect(10, startY, 37, height);
-          doc.setFont(undefined, 'bold');
+          doc.setFont("helvetica", 'bold');
           doc.text(label, 12, startY + 5);
-          doc.setFont(undefined, 'normal');
+          doc.setFont("helvetica", 'normal');
           doc.rect(47, startY, 240, height);
           if (label.toLowerCase().includes("instruction") && /^https?:\/\/\S+$/i.test(content.trim())) {
             doc.setTextColor(0, 102, 204);
@@ -696,48 +782,67 @@ function addAnalysisBlock() {
     drawSingleColumnTable("Area Calculation", areaBlocks);
     drawSingleColumnTable("Other Analysis", analysisBlocks);
 
-const blob = doc.output("blob");
-const fileName = `GIS_Request_${Date.now()}.pdf`;
+const zip = new JSZip();
 
-// Encode full Base64 with prefix
-const fileContent = await new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onloadend = () => {
-  const base64 = reader.result.split(",")[1]; // ✅ remove prefix
-  resolve(base64);
-};
-  reader.onerror = reject;
-  reader.readAsDataURL(blob);
-});
+  const pdfBlob = doc.output("blob");
+  const downloadPdf = document.getElementById("downloadPdfCheckbox").checked;
+	if (downloadPdf) {
+	  const pdfUrl = URL.createObjectURL(pdfBlob);
+	  const link = document.createElement("a");
+	  link.href = pdfUrl;
+	  link.download = "GIS_Request.pdf";
+	  document.body.appendChild(link);
+	  link.click();
+	  document.body.removeChild(link);
+	  URL.revokeObjectURL(pdfUrl);
+	}
+  zip.file("GIS_Request.pdf", pdfBlob);
 
-const payload = {
-  projectNumber,
-  abtracTask,
-  requiredBy,
-  fileName,
-  fileContent
-};
-
-    const url = "https://defaulteccdde28e6c24e5cbcd5aa5aec36eb.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58b4bb2b2cda443d93b621a77a538065/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EE0jJGYXMNUtRP4zZEDW1j4nSFrXbzaJ_0gTHi6f4Yg";
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        alert("Request submitted successfully!");
-      } else {
-	  const errorText = await response.text();
-		alert("Submission failed: " + errorText);
-      }
-    } catch (error) {
-      console.error("Error submitting:", error);
-      alert("An error occurred while submitting.");
-    }
+  const fileInput = document.getElementById("fileUpload");
+  const uploadedFiles = fileInput.files;
+  for (let i = 0; i < uploadedFiles.length; i++) {
+    const file = uploadedFiles[i];
+    zip.file(file.name, file);
   }
+
+  // Generate ZIP and send
+  const base64Zip = await zip.generateAsync({ type: "base64" });
+  const fileName = `GIS_Request_${Date.now()}.zip`;
+
+  const payload = {
+    projectNumber,
+    abtracTask,
+    requiredBy,
+    fileName: fileName,
+    fileContent: base64Zip
+  };
+
+  const url = "https://defaulteccdde28e6c24e5cbcd5aa5aec36eb.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58b4bb2b2cda443d93b621a77a538065/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EE0jJGYXMNUtRP4zZEDW1j4nSFrXbzaJ_0gTHi6f4Yg";
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const listItemID = data.ID || data.id || data.itemID;
+
+      // Optional: remove below if all files are already zipped
+      // await sendAdditionalFiles(listItemID, fileName);
+
+      alert("Request and attachments submitted successfully!");
+    } else {
+      const errorText = await response.text();
+      alert("Submission failed: " + errorText);
+    }
+  } catch (error) {
+    console.error("Error submitting:", error);
+    alert("An error occurred while submitting.");
+  }
+}
 </script>
 </body>
 </html>
